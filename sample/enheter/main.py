@@ -71,11 +71,14 @@ class Enhet:
     def namn(self):
         return self._namn
 
+    def namnge(self, namn, kort, dimension):
+        return Enhet(self.delar, namn, kort, dimension, self.faktor)
+
     def __mul__(self, other):
         if type(other) is Grundenhet:
-            return Enhet(self.delar + [Delenhet(other, 1)])
+            return Enhet(self.delar + [Delenhet(other, 1)], faktor = self.faktor)
         elif type(other) is Enhet:
-            return Enhet(self.delar + other.delar)
+            return Enhet(self.delar + other.delar, faktor = self.faktor * other.faktor)
         elif type(other) is int or type(other) is float:
             return Enhet(self.delar, self._namn, self.kort, self.dimension, self.faktor * other)
 

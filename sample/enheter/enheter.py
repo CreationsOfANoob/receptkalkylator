@@ -8,7 +8,4 @@ kg = Grundenhet("kilogram", "kg", "massa")
 kr = Grundenhet("kronor", "kr", "värde")
 
 # Härledda enheter
-l = m * m * m
-
-if __name__=="__main__":
-    print(l)
+l = (0.001 * m * m * m).namnge("liter", "l", "volym")

@@ -63,6 +63,10 @@ class TestaEnheter(unittest.TestCase):
         b = "stycken (st), antal: enhetslös"
         self.assertEqual(repr(a), b)
 
+    def testa_dividera_enhetslos_enhet(self):
+        m = grund("", "m", "")
+        self.assertEqual(repr(m / m), "enhetslös")
+
     def testa_multiplicera_grundenheter_olika(self):
         a = grund("", "N", "") * grund("", "m", "")
         self.assertEqual(repr(a), "N * m")
@@ -75,13 +79,47 @@ class TestaEnheter(unittest.TestCase):
         a = grund("", "m", "") * 5
         self.assertEqual(repr(a), "5 m")
 
+    def testa_multiplicera_integer_grundenhet(self):
+        a = 5 * grund("", "m", "")
+        self.assertEqual(repr(a), "5 m")
+
+    def testa_multiplicera_integer_integer_grundenhet(self):
+        a = 5 * 2 * grund("", "m", "")
+        self.assertEqual(repr(a), "10 m")
+
+    def testa_multiplicera_integer_grundenhet_grundenhet(self):
+        m = grund("", "m", "")
+        a = 5 * m * m
+        self.assertEqual(repr(a), "5 m^2")
+
+    def testa_multiplicera_grundenhet_grundenhet_integer(self):
+        m = grund("", "m", "")
+        a = m * m * 5
+        self.assertEqual(repr(a), "5 m^2")
+
+    def testa_multiplicera_float_grundenhet(self):
+        a = 0.001 * grund("", "m", "")
+        self.assertEqual(repr(a), "0.001 m")
+
     def testa_multiplicera_grundenhet_enhet(self):
         a = grund("", "kg", "") * samman("", "", "", 1, [delenh("W", 1)])
         self.assertEqual(repr(a), "kg * W")
 
-    def testa_multiplicera_enhet_integer(self):
+    def testa_multiplicera_grundenhet_enhet_med_faktor(self):
+        a = grund("", "kg", "") * samman("", "", "", 10, [delenh("W", 1)])
+        self.assertEqual(repr(a), "10 kg * W")
+
+    def testa_multiplicera_integer_enhet(self):
         a = 3 * samman("", "", "", 1, [delenh("W", 1)])
         self.assertEqual(repr(a), "3 W")
+
+    def testa_multiplicera_enhet_integer(self):
+        a = samman("", "", "", 1, [delenh("W", 1)]) * 4
+        self.assertEqual(repr(a), "4 W")
+
+    def testa_multiplicera_enhet_float(self):
+        a = 0.1 * samman("", "", "", 1, [delenh("W", 1)])
+        self.assertEqual(repr(a), "0.1 W")
 
     def testa_exponent_grundenhet(self):
         a = grund("", "m", "") ** 2
@@ -112,6 +150,21 @@ class TestaEnheter(unittest.TestCase):
         a = m / s**2
         self.assertEqual(repr(a), "m * s^-2")
 
+    def testa_byt_namn_enhet(self):
+        a = samman("", "", "", 1, [delenh("m", 1)]).namnge("meter", "m", "längd")
+        self.assertEqual(repr(a), "meter (m), längd: m")
+
+    def testa_byt_namn_enhet_med_faktor(self):
+        a = samman("", "", "", 1000, [delenh("m", 1)]).namnge("kilometer", "km", "längd")
+        self.assertEqual(repr(a), "kilometer (km), längd: 1000 m")
+
+    def testa_byt_namn_enhet_med_faktor_float(self):
+        a = samman("", "", "", 0.001, [delenh("m", 1)]).namnge("millimeter", "mm", "längd")
+        self.assertEqual(repr(a), "millimeter (mm), längd: 0.001 m")
+
+    def testa_byt_namn_enhet_med_faktor_float_multiplicerad(self):
+        a = (0.001 * samman("", "", "", 1, [delenh("m", 1)])).namnge("millimeter", "mm", "längd")
+        self.assertEqual(repr(a), "millimeter (mm), längd: 0.001 m")
 
 class TestaStorheter(unittest.TestCase):
     pass

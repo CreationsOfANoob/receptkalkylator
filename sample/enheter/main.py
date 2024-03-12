@@ -4,8 +4,14 @@ from dataclasses import dataclass
 @dataclass
 class Grundenhet:
     namn: str # t.ex. meter
-    kort: str # förkortning, t.ex. m
+    _kort: str # förkortning, t.ex. m
     dimension: str # t.ex. längd
+
+    def kort(self):
+        return self._kort
+
+    def har_samma_dimension(self, other):
+        return self == other
 
     def __mul__(self, other):
         return Enhet([Delenhet(self, 1)]) * other
@@ -23,18 +29,27 @@ class Grundenhet:
             return Enhet([Delenhet(self, other)])
 
     def __eq__(self, other):
-        return self.kort == other.kort and self.dimension == other.dimension
+        if type(other) is Grundenhet:
+            return self._kort == other._kort and self.dimension == other.dimension
+        return NotImplemented
 
     def __repr__(self):
-        return f"{self.namn} ({self.kort}), {self.dimension}"
+        return f"{self.namn} ({self._kort}), {self.dimension}"
 
 @dataclass
 class Delenhet:
     enhet: Grundenhet
     potens: int
 
-    def har_samma_enhet(self, other):
-        return self.enhet == other.enhet
+    def har_samma_dimension(self, other):
+        if type(other) is Delenhet:
+            return self == other
+        return NotImplemented
+
+    def har_samma_grunddimension(self, other):
+        if type(other) is Delenhet:
+            return self.enhet == other.enhet
+        return NotImplemented
 
     def __imul__(self, other):
         self.potens += other.potens
@@ -42,16 +57,26 @@ class Delenhet:
     def __pow__(self, other):
         return Delenhet(self.enhet, self.potens * other)
 
+    def __lt__(self, other):
+        return self.enhet._kort < other.enhet._kort and self.potens == other.potens or self.potens < other.potens
+
+    def __eq__(self, other):
+        if type(other) is Grundenhet:
+            return self.potens == 1 and self.enhet == other
+        if type(other) is Delenhet:
+            return self.potens == other.potens and self.enhet == other.enhet
+        return NotImplemented
+
     def __repr__(self):
         if self.potens == 1:
-            return f"{self.enhet.kort}"
-        return f"{self.enhet.kort}^{self.potens}"
+            return f"{self.enhet._kort}"
+        return f"{self.enhet._kort}^{self.potens}"
 
 @dataclass
 class Enhet:
     delar: list[Delenhet]
     _namn: str = "" # t.ex. hektar
-    kort: str = "" # t.ex. ha
+    _kort: str = "" # t.ex. ha
     dimension: str = "" # t.ex. area
     faktor: float = 1 # t.ex. 10000.0
 
@@ -59,11 +84,11 @@ class Enhet:
         # slå ihop dubbla enhetsdefinitioner
         rensade_delar = []
         for del_ in self.delar:
-            if not any(del_.har_samma_enhet(del_tillagd) for del_tillagd in rensade_delar):
+            if not any(del_.har_samma_grunddimension(del_tillagd) for del_tillagd in rensade_delar):
                 rensade_delar.append(del_)
             else:
                 for del_samma in rensade_delar:
-                    if del_samma.har_samma_enhet(del_):
+                    if del_samma.har_samma_grunddimension(del_):
                         del_samma *= del_
         nya_delar = [del_ for del_ in rensade_delar if del_.potens != 0]
         self.delar = nya_delar
@@ -71,8 +96,20 @@ class Enhet:
     def namn(self):
         return self._namn
 
+    def kort(self):
+        return self._kort
+
     def namnge(self, namn, kort, dimension):
         return Enhet(self.delar, namn, kort, dimension, self.faktor)
+
+    def har_samma_dimension(self, other):
+        if type(other) is Enhet:
+            return sorted(self.delar) == sorted(other.delar)
+        elif type(other) is Grundenhet:
+            if len(self.delar) == 1:
+                return self.delar[0] == other
+            return False
+        return NotImplemented
 
     def __mul__(self, other):
         if type(other) is Grundenhet:
@@ -80,7 +117,7 @@ class Enhet:
         elif type(other) is Enhet:
             return Enhet(self.delar + other.delar, faktor = self.faktor * other.faktor)
         elif type(other) is int or type(other) is float:
-            return Enhet(self.delar, self._namn, self.kort, self.dimension, self.faktor * other)
+            return Enhet(self.delar, self._namn, self._kort, self.dimension, self.faktor * other)
 
     __rmul__ = __mul__
 
@@ -93,21 +130,30 @@ class Enhet:
         mult_delar = []
         for del_ in self.delar:
             mult_delar.append(del_ ** other)
-        return Enhet(mult_delar)
+        return Enhet(mult_delar, faktor = pow(self.faktor, other))
+
+    def __eq__(self, other):
+        if type(other) is Enhet:
+            return self.faktor == other.faktor and sorted(self.delar) == sorted(other.delar)
+        if type(other) is Grundenhet:
+            if len(self.delar) == 1:
+                return self.faktor == 1 and self.delar[0] == other
+            return False
+        return NotImplemented
 
     def __repr__(self):
         beskrivning = ""
         if self._namn != "":
             beskrivning += self._namn
-        if self.kort != "":
-            beskrivning += f" ({self.kort})"
+        if self._kort != "":
+            beskrivning += f" ({self._kort})"
         if self.dimension != "":
             beskrivning += ", " + self.dimension
         if beskrivning != "":
             beskrivning += ": "
         definition = ""
         if self.faktor != 1:
-            definition = str(self.faktor) + " "
+            definition = f"{self.faktor:g} "
         if self.delar == []:
             definition += "enhetslös"
         definition += " * ".join(str(delenh) for delenh in self.delar)

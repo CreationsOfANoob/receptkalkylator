@@ -1,4 +1,7 @@
-import enheter
+import enheter as enh
 
 if __name__=="__main__":
-    print(enheter.l)
+    for enhet in enh.enheter:
+        print(enhet)
+    print()
+    print(enh.Tal(10, enh.m))

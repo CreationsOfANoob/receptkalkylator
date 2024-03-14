@@ -2,6 +2,7 @@ from enum import Enum
 from dataclasses import dataclass
 
 # Alla enheter måste ha unika förkortningar.
+
 @dataclass
 class Grundenhet:
     namn: str # t.ex. meter

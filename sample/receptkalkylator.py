@@ -5,3 +5,4 @@ if __name__=="__main__":
         print(enhet)
     print()
     print(enh.Tal(10, enh.m))
+    print(enh.Tal.tolka("10 dl"))

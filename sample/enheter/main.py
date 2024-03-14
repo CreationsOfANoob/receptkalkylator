@@ -1,6 +1,7 @@
 from enum import Enum
 from dataclasses import dataclass
 
+# Alla enheter måste ha unika förkortningar.
 @dataclass
 class Grundenhet:
     namn: str # t.ex. meter
@@ -9,6 +10,9 @@ class Grundenhet:
 
     def kort(self):
         return self._kort
+
+    def faktor(self):
+        return 1
 
     def har_samma_dimension(self, other):
         return self == other
@@ -30,7 +34,7 @@ class Grundenhet:
 
     def __eq__(self, other):
         if type(other) is Grundenhet:
-            return self._kort == other._kort and self.dimension == other.dimension
+            return self._kort == other._kort
         return NotImplemented
 
     def __repr__(self):
@@ -58,7 +62,7 @@ class Delenhet:
         return Delenhet(self.enhet, self.potens * other)
 
     def __lt__(self, other):
-        return self.enhet._kort < other.enhet._kort and self.potens == other.potens or self.potens < other.potens
+        return self.potens > other.potens#(self.enhet.kort() < other.enhet.kort() and self.potens == other.potens) or self.potens < other.potens
 
     def __eq__(self, other):
         if type(other) is Grundenhet:
@@ -78,7 +82,7 @@ class Enhet:
     _namn: str = "" # t.ex. hektar
     _kort: str = "" # t.ex. ha
     dimension: str = "" # t.ex. area
-    faktor: float = 1 # t.ex. 10000.0
+    _faktor: float = 1 # t.ex. 10000.0
 
     def __post_init__(self):
         # slå ihop dubbla enhetsdefinitioner
@@ -90,8 +94,12 @@ class Enhet:
                 for del_samma in rensade_delar:
                     if del_samma.har_samma_grunddimension(del_):
                         del_samma *= del_
-        nya_delar = [del_ for del_ in rensade_delar if del_.potens != 0]
+        nya_delar = sorted([del_ for del_ in rensade_delar if del_.potens != 0])
         self.delar = nya_delar
+
+    @classmethod
+    def enhetslos(cls):
+        return Enhet([], _faktor = 1)
 
     def namn(self):
         return self._namn
@@ -99,8 +107,11 @@ class Enhet:
     def kort(self):
         return self._kort
 
+    def faktor(self):
+        return self._faktor
+
     def namnge(self, namn, kort, dimension):
-        return Enhet(self.delar, namn, kort, dimension, self.faktor)
+        return Enhet(self.delar, namn, kort, dimension, self._faktor)
 
     def har_samma_dimension(self, other):
         if type(other) is Enhet:
@@ -113,31 +124,32 @@ class Enhet:
 
     def __mul__(self, other):
         if type(other) is Grundenhet:
-            return Enhet(self.delar + [Delenhet(other, 1)], faktor = self.faktor)
+            return Enhet(self.delar + [Delenhet(other, 1)], _faktor = self._faktor)
         elif type(other) is Enhet:
-            return Enhet(self.delar + other.delar, faktor = self.faktor * other.faktor)
+            return Enhet(self.delar + other.delar, _faktor = self._faktor * other._faktor)
         elif type(other) is int or type(other) is float:
-            return Enhet(self.delar, self._namn, self._kort, self.dimension, self.faktor * other)
+            return Enhet(self.delar, self._namn, self._kort, self.dimension, self._faktor * other)
 
     __rmul__ = __mul__
 
     def __truediv__(self, other):
         return self * (other ** -1)
 
-    __rtruediv__ = __truediv__
+    def __rtruediv__(self, other):
+        return (self ** -1) * other
 
     def __pow__(self, other):
         mult_delar = []
         for del_ in self.delar:
             mult_delar.append(del_ ** other)
-        return Enhet(mult_delar, faktor = pow(self.faktor, other))
+        return Enhet(mult_delar, _faktor = pow(self._faktor, other))
 
     def __eq__(self, other):
         if type(other) is Enhet:
-            return self.faktor == other.faktor and sorted(self.delar) == sorted(other.delar)
+            return self._faktor == other._faktor and sorted(self.delar) == sorted(other.delar)
         if type(other) is Grundenhet:
             if len(self.delar) == 1:
-                return self.faktor == 1 and self.delar[0] == other
+                return self._faktor == 1 and self.delar[0] == other
             return False
         return NotImplemented
 
@@ -152,8 +164,8 @@ class Enhet:
         if beskrivning != "":
             beskrivning += ": "
         definition = ""
-        if self.faktor != 1:
-            definition = f"{self.faktor:g} "
+        if self._faktor != 1:
+            definition = f"{self._faktor:g} "
         if self.delar == []:
             definition += "enhetslös"
         definition += " * ".join(str(delenh) for delenh in self.delar)

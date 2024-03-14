@@ -1,6 +1,12 @@
 import unittest
 from .context import sample
 
+m = sample.enheter.m
+km = sample.enheter.km
+s = sample.enheter.s
+dl = sample.enheter.dl
+enhetslos = sample.enheter.Enhet([], "enhetslös", "", "", 1)
+
 def grund(namn, kort, dimension):
     return sample.enheter.Grundenhet(namn, kort, dimension)
 
@@ -12,6 +18,9 @@ def samman(namn, kort, dimension, faktor, delar): # sammansatt enhet
 
 def tal(kvantitet, enhet):
     return sample.enheter.Tal(kvantitet, enhet)
+
+def tolka_tal(text):
+    return sample.enheter.Tal.tolka(text)
 
 def add(a, b):
     return a + b
@@ -72,41 +81,38 @@ class TestaEnheter(unittest.TestCase):
         self.assertEqual(repr(a), b)
 
     def testa_dividera_enhetslos_enhet(self):
-        m = grund("", "m", "")
         self.assertEqual(repr(m / m), "enhetslös")
 
     def testa_multiplicera_grundenheter_olika(self):
-        a = grund("", "N", "") * grund("", "m", "")
+        a = grund("", "N", "") * m
         self.assertEqual(repr(a), "N * m")
 
     def testa_multiplicera_grundenheter_samma(self):
-        a = grund("", "m", "") * grund("", "m", "")
+        a = m * m
         self.assertEqual(repr(a), "m^2")
 
     def testa_multiplicera_grundenhet_integer(self):
-        a = grund("", "m", "") * 5
+        a = m * 5
         self.assertEqual(repr(a), "5 m")
 
     def testa_multiplicera_integer_grundenhet(self):
-        a = 5 * grund("", "m", "")
+        a = 5 * m
         self.assertEqual(repr(a), "5 m")
 
     def testa_multiplicera_integer_integer_grundenhet(self):
-        a = 5 * 2 * grund("", "m", "")
+        a = 5 * 2 * m
         self.assertEqual(repr(a), "10 m")
 
     def testa_multiplicera_integer_grundenhet_grundenhet(self):
-        m = grund("", "m", "")
         a = 5 * m * m
         self.assertEqual(repr(a), "5 m^2")
 
     def testa_multiplicera_grundenhet_grundenhet_integer(self):
-        m = grund("", "m", "")
         a = m * m * 5
         self.assertEqual(repr(a), "5 m^2")
 
     def testa_multiplicera_float_grundenhet(self):
-        a = 0.001 * grund("", "m", "")
+        a = 0.001 * m
         self.assertEqual(repr(a), "0.001 m")
 
     def testa_multiplicera_grundenhet_enhet(self):
@@ -142,15 +148,15 @@ class TestaEnheter(unittest.TestCase):
         self.assertEqual(repr(c), "20 s * m")
 
     def testa_exponent_grundenhet(self):
-        a = grund("", "m", "") ** 2
+        a = m ** 2
         self.assertEqual(repr(a), "m^2")
 
     def testa_division_grundenhet_int(self):
-        a = grund("", "m", "") / 2
+        a = m / 2
         self.assertEqual(repr(a), "0.5 m")
 
     def testa_division_int_grundenhet(self):
-        a = 1 / grund("", "m", "")
+        a = 1 / m
         self.assertEqual(repr(a), "m^-1")
 
     def testa_division_enhet_int(self):
@@ -160,19 +166,38 @@ class TestaEnheter(unittest.TestCase):
 
     def testa_division_int_enhet(self):
         m = samman("", "", "", 1, [delenh("m", 1)])
+        a = 1 / m
+        self.assertEqual(repr(a), "m^-1")
+
+    def testa_multiplicera_division_int_enhet(self):
+        m = samman("", "", "", 1, [delenh("m", 1)])
+        s = samman("", "", "", 1, [delenh("s", 1)])
+        a = s * (1 / m)
+        self.assertEqual(repr(a), "s * m^-1")
+
+    def testa_multiplicera_division_int_enhet_speglad(self):
+        m = samman("", "", "", 1, [delenh("m", 1)])
+        s = samman("", "", "", 1, [delenh("s", 1)])
+        a = (1 / m) * s
+        self.assertEqual(repr(a), "s * m^-1")
+
+    def testa_division_int_enhet(self):
+        m = samman("", "", "", 1, [delenh("m", 1)])
         s = samman("", "", "", 1, [delenh("s", 1)])
         a = m / s**2
         self.assertEqual(repr(a), "m * s^-2")
 
     def testa_division_grundenhet_enhet(self):
-        m = samman("", "", "", 1, [delenh("m", 1)])
-        s = grund("", "s", "")
-        a = m / s**2
+        m_ = samman("", "", "", 1, [delenh("m", 1)])
+        a = m_ / s**2
+        self.assertEqual(repr(a), "m * s^-2")
+
+    def testa_division_grundenhet_grundenhet_multiplicerad(self):
+        a = m / (s*s)
         self.assertEqual(repr(a), "m * s^-2")
 
     def testa_division_grundenhet_enhet_med_faktor(self):
         h = samman("", "", "", 3600, [delenh("s", 1)])
-        m = grund("", "m", "")
         km = 1000 * m
         a = h / km
         self.assertEqual(repr(a), "3.6 s * m^-1")
@@ -216,16 +241,28 @@ class TestaEnheter(unittest.TestCase):
         self.assertFalse(a == b)
 
     def testa_enhet_samma_grundenhet_samma(self):
-        a = grund("", "m", "")
+        a = m
         b = samman("", "", "", 1, [delenh("m", 1)])
-        self.assertTrue(a == b)
+        self.assertEqual(a, b)
 
+    def testa_skapa_enhetslos_enhet_funktion(self):
+        a = sample.enheter.Enhet.enhetslos()
+        self.assertEqual(a, samman("", "", "", 1, []))
 
-m = grund("", "m", "")
-s = grund("", "s", "")
-enhetslos = samman("enhetslös", "", "", 1, [])
 
 class TestaTal(unittest.TestCase):
+
+    def testa_repr_tal(self):
+        a = tal(1, m)
+        self.assertEqual(repr(a), "1 m")
+
+    def testa_repr_tal_fel(self):
+        a = tal(10, m)
+        self.assertNotEqual(repr(a), "1 m")
+
+    def testa_repr_tal_harledd_enhet(self):
+        a = tal(10, dl)
+        self.assertEqual(repr(a), "1 l")
 
     def testa_compare_tal_samma(self):
         a = tal(1, m)
@@ -281,6 +318,26 @@ class TestaTal(unittest.TestCase):
         a = tal(2, m)
         b = tal(2, s)
         self.assertEqual(a / b, tal(1, m * s**-1))
+
+    def testa_tolka_string_till_tal(self):
+        a = tal(10, m)
+        b = tolka_tal("10 m")
+        self.assertEqual(a, b)
+
+    def testa_tolka_string_till_tal_komplex(self):
+        a = tal(10, 0.001 * m * m * m)
+        b = tolka_tal("100 dl")
+        self.assertEqual(a, b)
+
+    def testa_tolka_string_till_tal_komplex_fel(self):
+        a = tal(10, 0.001 * m * m * m)
+        b = tolka_tal("10 l")
+        self.assertEqual(a, b)
+
+    def testa_skapa_tal_harledd_enhet(self):
+        a = tal(2000, m)
+        b = tal(2, km)
+        self.assertEqual(a / b, tal(1, enhetslos))
 
 
 if __name__ == "__main__":

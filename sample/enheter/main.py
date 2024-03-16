@@ -106,7 +106,13 @@ class Enhet:
         return self._namn
 
     def kort(self):
+        if self._kort == "":
+            return self.definition()
         return self._kort
+
+    def definition(self):
+        definition_ = " * ".join(str(delenh) for delenh in self.delar)
+        return definition_
 
     def faktor(self):
         return self._faktor
@@ -123,7 +129,12 @@ class Enhet:
             return False
         return NotImplemented
 
+    def copy(self):
+        return Enhet(self.delar, self._namn, self._kort, self.dimension, self._faktor)
+
     def __mul__(self, other):
+        if other is None:
+            return self.copy()
         if type(other) is Grundenhet:
             return Enhet(self.delar + [Delenhet(other, 1)], _faktor = self._faktor)
         elif type(other) is Enhet:
@@ -169,5 +180,5 @@ class Enhet:
             definition = f"{self._faktor:g} "
         if self.delar == []:
             definition += "enhetslös"
-        definition += " * ".join(str(delenh) for delenh in self.delar)
+        definition += self.definition()
         return beskrivning + definition

@@ -1,4 +1,17 @@
-import enheter as enh
+from .enheter import enheter as enh
+
+
+class Ingrediens:
+
+    def __init__(self):
+        pass
+
+    @classmethod
+    def tolka(cls, str_):
+        return(Ingrediens())
+
+    def kilopris(self):
+        return 1
 
 if __name__=="__main__":
     for enhet in enh.enheter:

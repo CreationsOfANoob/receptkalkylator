@@ -3,6 +3,7 @@ from .context import sample
 
 m = sample.enheter.m
 km = sample.enheter.km
+kg = sample.enheter.kg
 s = sample.enheter.s
 dl = sample.enheter.dl
 enhetslos = sample.enheter.Enhet([], "enhetslös", "", "", 1)
@@ -249,6 +250,10 @@ class TestaEnheter(unittest.TestCase):
         a = sample.enheter.Enhet.enhetslos()
         self.assertEqual(a, samman("", "", "", 1, []))
 
+    def testa_skriv_sammansatt_enhet_utan_forkortning(self):
+        a = samman("", "", "", 1, [delenh("m", 1)])
+        self.assertEqual(repr(a), "m")
+
 
 class TestaTal(unittest.TestCase):
 
@@ -338,6 +343,29 @@ class TestaTal(unittest.TestCase):
         a = tal(2000, m)
         b = tal(2, km)
         self.assertEqual(a / b, tal(1, enhetslos))
+
+    def testa_tolka_string_till_tal_med_division(self):
+        a = tal(10, m/s)
+        b = tolka_tal("10 m/s")
+        self.assertEqual(a, b)
+
+    def testa_tolka_string_till_tal_med_division_fel(self):
+        a = tal(10, m/s)
+        b = tolka_tal("10 s/m")
+        self.assertNotEqual(a, b)
+
+    def testa_tolka_string_till_tal_med_division_och_multiplikation(self):
+        a = tal(10, m * kg / s)
+        b = tolka_tal("10 m*kg/s")
+        self.assertEqual(a, b)
+
+    def testa_skriv_tal(self):
+        a = tal(3.14, m)
+        self.assertEqual(repr(a), "3.14 m")
+
+    def testa_skriv_tal_komplext(self):
+        a = tal(3.14, m/s)
+        self.assertEqual(repr(a), "3.14 m * s^-1")
 
 
 if __name__ == "__main__":

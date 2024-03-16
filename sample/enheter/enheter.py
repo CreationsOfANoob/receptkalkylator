@@ -19,7 +19,7 @@ msk = (15 * ml).namnge("matsked", "msk", "volym")
 p = (kg / (m * m * m)).namnge("", "kg/m^3", "densitet")
 
 
-si_enheter = [m, kg]
+si_enheter = [m, kg, s]
 andra_enheter = [kr]
 harledda_enheter = [l, ml, dl, tsk, msk, p]
 enheter = si_enheter + andra_enheter + harledda_enheter + [enhetslos]

@@ -10,6 +10,8 @@ class Tal:
     enhet: Grundenhet | Enhet
 
     def __post_init__(self):
+        if type(self.enhet) is str:
+            self.enhet = hitta_enhet_str(self.enhet)
         if self.enhet is None:
             self.enhet = Enhet.enhetslos()
         for enh in bef_enheter:
@@ -23,7 +25,10 @@ class Tal:
         delar = str_.split()
         kvant = float(delar[0])
         enh = hitta_enhet_str(delar[1])
-        return Tal(kvant, enh[0])
+        if enh is None:
+            raise(ValueError(f"Kunde inte tolka {delar[1]} som en enhet (i {str_})"))
+        return Tal(kvant, enh)
+
 
     def __add__(self, other):
         if type(other) is Tal:
@@ -67,7 +72,36 @@ class Tal:
 
 
 def hitta_enhet_str(str_):
+    # försök först att hitta en definierad enhet
+    enh = hitta_enkel_enhet(str_)
+    if not enh is None:
+        return enh
+
+    # försök sedan att hitta sammansatt enhet
+    if "/" in str_ or "*" in str_:
+        enh = None
+        str_enh = ""
+        last_operator = "*"
+        i = 0
+        for l in str_:
+            i += 1
+            if l in "/*" or i == len(str_):
+                if i == len(str_):
+                    str_enh += l
+                tolkad_enhet = hitta_enkel_enhet(str_enh)
+                if last_operator == "*":
+                    enh *= tolkad_enhet
+                else:
+                    enh /= tolkad_enhet
+                last_operator = l
+                str_enh = ""
+            else:
+                str_enh += l
+        return enh
+
+
+def hitta_enkel_enhet(str_):
     for enh in bef_enheter:
         if enh.kort() == str_:
-            return (enh, enh.faktor())
+            return enh
     return None

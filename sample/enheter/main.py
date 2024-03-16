@@ -56,6 +56,17 @@ class Delenhet:
             return self.enhet == other.enhet
         return NotImplemented
 
+    def __mul__(self, other):
+        return self.enhet * other
+
+    __rmul__ = __mul__
+
+    def __truediv__(self, other):
+        return self.enhet / other
+
+    def __rtruediv__(self, other):
+        return other / self.enhet
+
     def __imul__(self, other):
         self.potens += other.potens
 

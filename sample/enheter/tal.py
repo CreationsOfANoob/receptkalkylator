@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Union
-from .main import Grundenhet, Enhet
+from .main import Grundenhet, Enhet, Delenhet
 from .enheter import enheter as bef_enheter
 
 
@@ -101,7 +101,13 @@ def hitta_enhet_str(str_):
 
 
 def hitta_enkel_enhet(str_):
+    enh_kort = str_
+    exponent = 1
+    if "^" in str_:
+        delar = str_.split("^")
+        enh_kort = delar[0]
+        exponent = int(delar[1])
     for enh in bef_enheter:
-        if enh.kort() == str_:
-            return enh
+        if enh.kort() == enh_kort:
+            return Enhet([Delenhet(enh, exponent)])
     return None

@@ -1,12 +1,12 @@
 from .main import Grundenhet, Enhet
 
 # SI-enheter
-m = Grundenhet("meter", "m", "sträcka")
-kg = Grundenhet("kilogram", "kg", "massa")
-s = Grundenhet("sekunder", "s", "tid")
+m = Grundenhet(0, "meter", "m", "sträcka")
+kg = Grundenhet(1, "kilogram", "kg", "massa")
+s = Grundenhet(2, "sekunder", "s", "tid")
 
 # Andra enheter
-kr = Grundenhet("kronor", "kr", "värde")
+kr = Grundenhet(3, "kronor", "kr", "värde")
 enhetslos = Enhet.enhetslos()
 
 # Härledda enheter

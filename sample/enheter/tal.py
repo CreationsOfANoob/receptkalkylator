@@ -14,11 +14,13 @@ class Tal:
             self.enhet = hitta_enhet_str(self.enhet)
         if self.enhet is None:
             self.enhet = Enhet.enhetslos()
-        for enh in bef_enheter:
-            if self.enhet.har_samma_dimension(enh):
-                self.kvantitet *= self.enhet.faktor() / enh.faktor()
-                self.enhet = enh
-                break
+        self.kvantitet *= self.enhet.faktor() # Ta ut enhetens faktor
+        if not self.enhet in bef_enheter:
+            for enh in bef_enheter:
+                if self.enhet.har_samma_dimension(enh):
+                    a = self.kvantitet
+                    self.enhet = enh
+                    break
 
     @classmethod
     def tolka(cls, str_):
@@ -39,10 +41,11 @@ class Tal:
 
     def __mul__(self, other):
         if type(other) is int or type(other) is float:
-            kvantitet = self.kvantitet * other * self.enhet.faktor()
+            kvantitet = self.kvantitet * other
             return Tal(kvantitet, self.enhet)
         elif type(other) is Tal:
-            return Tal(self.kvantitet * other.kvantitet, self.enhet * other.enhet)
+            ny_enhet = self.enhet * other.enhet
+            return Tal((self.kvantitet * other.kvantitet) / ny_enhet.faktor(), ny_enhet)
         return NotImplemented
 
     __rmul__ = __mul__
@@ -52,23 +55,27 @@ class Tal:
 
     def __pow__(self, other):
         if type(other) is int or type(other) is float:
-            return Tal(pow(self.kvantitet, other), pow(self.enhet, other))
+            ny_enhet = pow(self.enhet, other)
+            return Tal(pow(self.kvantitet, other) / ny_enhet.faktor(), ny_enhet)
         return NotImplemented
 
     def __truediv__(self, other):
         return self * pow(other, -1)
 
-    __rtruediv__ = __truediv__
+    def __rtruediv__(self, other):
+        return other * pow(self, -1)
 
     def __eq__(self, other):
         if type(other) is Tal:
-            return self.kvantitet == other.kvantitet and self.enhet == other.enhet
+            return self.kvantitet == other.kvantitet and self.enhet.har_samma_dimension(other.enhet)
+        if type(other) is int or type(other) is float:
+            return self.kvantitet == other and self.enhet.ar_enhetslos()
         return NotImplemented
 
     def __repr__(self):
         if self.enhet.kort() == "":
             return f"{self.kvantitet:g}"
-        return f"{self.kvantitet:g} {self.enhet.kort()}"
+        return f"{(self.kvantitet / self.enhet.faktor()):g} {self.enhet.kort()}"
 
 
 def hitta_enhet_str(str_):
@@ -109,5 +116,8 @@ def hitta_enkel_enhet(str_):
         exponent = int(delar[1])
     for enh in bef_enheter:
         if enh.kort() == enh_kort:
-            return Enhet([Delenhet(enh, exponent)])
+            if type(enh) is Grundenhet:
+                return Enhet([Delenhet(enh, exponent)])
+            elif type(enh) is Enhet:
+                return enh
     return None

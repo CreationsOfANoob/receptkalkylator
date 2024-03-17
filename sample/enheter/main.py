@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 @dataclass
 class Grundenhet:
+    id: int # Unik identifierare
     namn: str # t.ex. meter
     _kort: str # förkortning, t.ex. m
     dimension: str # t.ex. längd
@@ -15,8 +16,16 @@ class Grundenhet:
     def faktor(self):
         return 1
 
+    def potens(self):
+        return 1
+
     def har_samma_dimension(self, other):
-        return self == other
+        if type(other) is Grundenhet:
+            if self.id is None or other.id is None:
+                return self._kort == other._kort
+            return self.id == other.id
+        if type(other) is Enhet:
+            return Enhet([Delenhet(self, 1)]).har_samma_dimension(other)
 
     def __mul__(self, other):
         return Enhet([Delenhet(self, 1)]) * other
@@ -35,7 +44,10 @@ class Grundenhet:
 
     def __eq__(self, other):
         if type(other) is Grundenhet:
-            return self._kort == other._kort
+            return self.id == other.id
+        #    if (not type(self.id) is None) and (not type(other.id) is None):
+        #        return self.id == other.id
+        #    return self._kort == other._kort
         return NotImplemented
 
     def __repr__(self):
@@ -44,7 +56,7 @@ class Grundenhet:
 @dataclass
 class Delenhet:
     enhet: Grundenhet
-    potens: int
+    _potens: int
 
     def har_samma_dimension(self, other):
         if type(other) is Delenhet:
@@ -55,6 +67,9 @@ class Delenhet:
         if type(other) is Delenhet:
             return self.enhet == other.enhet
         return NotImplemented
+
+    def potens(self):
+        return self._potens
 
     def __mul__(self, other):
         return self.enhet * other
@@ -68,25 +83,25 @@ class Delenhet:
         return other / self.enhet
 
     def __imul__(self, other):
-        self.potens += other.potens
+        self._potens += other.potens()
 
     def __pow__(self, other):
-        return Delenhet(self.enhet, self.potens * other)
+        return Delenhet(self.enhet, self._potens * other)
 
     def __lt__(self, other):
-        return self.potens > other.potens#(self.enhet.kort() < other.enhet.kort() and self.potens == other.potens) or self.potens < other.potens
+        return self._potens > other.potens()
 
     def __eq__(self, other):
         if type(other) is Grundenhet:
-            return self.potens == 1 and self.enhet == other
+            return self._potens == 1 and self.enhet == other
         if type(other) is Delenhet:
-            return self.potens == other.potens and self.enhet == other.enhet
+            return self._potens == other._potens and self.enhet == other.enhet
         return NotImplemented
 
     def __repr__(self):
-        if self.potens == 1:
+        if self._potens == 1:
             return f"{self.enhet._kort}"
-        return f"{self.enhet._kort}^{self.potens}"
+        return f"{self.enhet._kort}^{self._potens}"
 
 @dataclass
 class Enhet:
@@ -97,6 +112,14 @@ class Enhet:
     _faktor: float = 1 # t.ex. 10000.0
 
     def __post_init__(self):
+        if type(self.delar) is Grundenhet:
+            self.delar = [Delenhet(self.delar, 1)]
+        if type(self.delar) is Enhet:
+            faktor = self.delar._faktor * self._faktor
+            self.delar = self.delar.delar
+            self._faktor = faktor
+        if any(type(del_) is not Delenhet for del_ in self.delar):
+            raise(ValueError("Delar i Enhet måste vara lista med typen Delenhet"))
         # slå ihop dubbla enhetsdefinitioner
         rensade_delar = []
         for del_ in self.delar:
@@ -106,12 +129,15 @@ class Enhet:
                 for del_samma in rensade_delar:
                     if del_samma.har_samma_grunddimension(del_):
                         del_samma *= del_
-        nya_delar = sorted([del_ for del_ in rensade_delar if del_.potens != 0])
+        nya_delar = sorted([del_ for del_ in rensade_delar if del_.potens() != 0])
         self.delar = nya_delar
 
     @classmethod
     def enhetslos(cls):
         return Enhet([], _faktor = 1)
+
+    def ar_enhetslos(self):
+        return self.delar == []
 
     def namn(self):
         return self._namn
@@ -127,6 +153,10 @@ class Enhet:
 
     def faktor(self):
         return self._faktor
+
+    def potens(self):
+        if len(self.delar) == 1:
+            return self.delar[0].potens()
 
     def namnge(self, namn, kort, dimension):
         return Enhet(self.delar, namn, kort, dimension, self._faktor)

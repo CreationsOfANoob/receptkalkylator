@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Union
+from math import isclose
 from .main import Grundenhet, Enhet, Delenhet
 from .enheter import enheter as bef_enheter
 
@@ -24,13 +25,25 @@ class Tal:
 
     @classmethod
     def tolka(cls, str_):
-        delar = str_.split()
-        kvant = float(delar[0])
-        enh = hitta_enhet_str(delar[1])
-        if enh is None:
-            raise(ValueError(f"Kunde inte tolka {delar[1]} som en enhet (i {str_})"))
-        return Tal(kvant, enh)
+        str_ = str_.replace(",", ".")
+        if type(str_) is str:
+            delar = str_.split()
+            kvant = float(delar[0])
+            enh = hitta_enhet_str(delar[1])
+            if enh is None:
+                raise(ValueError(f"Kunde inte tolka {delar[1]} som en enhet (i {str_})"))
+            return Tal(kvant, enh)
 
+    def copy(self):
+        return Tal(self.kvantitet, self.enhet)
+
+    def har_samma_dimension(self, other):
+        if type(other) is Tal:
+            return self.enhet == other.enhet
+        return self.enhet.har_samma_dimension(other)
+
+    def faktor(self):
+        return self.enhet.faktor()
 
     def __add__(self, other):
         if type(other) is Tal:
@@ -41,11 +54,13 @@ class Tal:
 
     def __mul__(self, other):
         if type(other) is int or type(other) is float:
-            kvantitet = self.kvantitet * other
-            return Tal(kvantitet, self.enhet)
+            kvantitet_ = self.kvantitet * other
+            return Tal(kvantitet_, self.enhet)
         elif type(other) is Tal:
             ny_enhet = self.enhet * other.enhet
             return Tal((self.kvantitet * other.kvantitet) / ny_enhet.faktor(), ny_enhet)
+        elif type(other) is Enhet:
+            return self * Tal(1, other)
         return NotImplemented
 
     __rmul__ = __mul__
@@ -67,9 +82,11 @@ class Tal:
 
     def __eq__(self, other):
         if type(other) is Tal:
-            return self.kvantitet == other.kvantitet and self.enhet.har_samma_dimension(other.enhet)
+            return isclose(self.kvantitet, other.kvantitet) and self.enhet.har_samma_dimension(other.enhet)
         if type(other) is int or type(other) is float:
             return self.kvantitet == other and self.enhet.ar_enhetslos()
+        if type(other) is Enhet or type(other) is Grundenhet:
+            return self.kvantitet == 1 and self.enhet == other
         return NotImplemented
 
     def __repr__(self):
@@ -90,22 +107,23 @@ def hitta_enhet_str(str_):
         str_enh = ""
         last_operator = "*"
         i = 0
-        for l in str_:
+        for char in str_:
             i += 1
-            if l in "/*" or i == len(str_):
+            if char in "/*" or i == len(str_):
                 if i == len(str_):
-                    str_enh += l
+                    str_enh += char
                 tolkad_enhet = hitta_enkel_enhet(str_enh)
+                if tolkad_enhet is None:
+                    raise(ValueError(f"Kunde inte tolka enheten {str_enh}"))
                 if last_operator == "*":
                     enh *= tolkad_enhet
                 else:
                     enh /= tolkad_enhet
-                last_operator = l
+                last_operator = char
                 str_enh = ""
             else:
-                str_enh += l
+                str_enh += char
         return enh
-
 
 def hitta_enkel_enhet(str_):
     enh_kort = str_
@@ -120,4 +138,3 @@ def hitta_enkel_enhet(str_):
                 return Enhet([Delenhet(enh, exponent)])
             elif type(enh) is Enhet:
                 return enh
-    return None

@@ -333,6 +333,11 @@ class TestaTal(unittest.TestCase):
         b = tal(2, m)
         self.assertEqual(a / b, tal(1, enhetslos))
 
+    def testa_dividera_tal_med_grundenhet(self):
+        a = tal(2, m*s)
+        b = m
+        self.assertEqual(a / b, tal(2, s))
+
     def testa_dividera_tal_olika_enhet(self):
         a = tal(2, m)
         b = tal(2, s)

@@ -1,4 +1,3 @@
-from enum import Enum
 from dataclasses import dataclass
 
 # Alla enheter måste ha unika förkortningar.
@@ -15,6 +14,9 @@ class Grundenhet:
 
     def faktor(self):
         return 1
+
+    def delar(self):
+        return [Delenhet(self, 1)]
 
     def potens(self):
         return 1
@@ -53,15 +55,21 @@ class Grundenhet:
     def __repr__(self):
         return f"{self.namn} ({self._kort}), {self.dimension}"
 
-@dataclass
+
 class Delenhet:
     enhet: Grundenhet
     _potens: int
 
+    def __init__(self, enhet, potens):
+        self.enhet = enhet
+        self._potens = potens
+        if self._potens == 0:
+            raise(ValueError("Delenhet kan inte ha potensen 0"))
+
     def har_samma_dimension(self, other):
         if type(other) is Delenhet:
             return self == other
-        return NotImplemented
+        raise(NotImplementedError())
 
     def har_samma_grunddimension(self, other):
         if type(other) is Delenhet:
@@ -99,45 +107,45 @@ class Delenhet:
         return NotImplemented
 
     def __repr__(self):
-        if self._potens == 1:
-            return f"{self.enhet._kort}"
-        return f"{self.enhet._kort}^{self._potens}"
+        if self.potens() == 1:
+            return f"{self.enhet.kort()}"
+        return f"{self.enhet.kort()}^{self.potens()}"
 
 @dataclass
 class Enhet:
-    delar: list[Delenhet]
+    _delar: list[Delenhet]
     _namn: str = "" # t.ex. hektar
     _kort: str = "" # t.ex. ha
     dimension: str = "" # t.ex. area
     _faktor: float = 1 # t.ex. 10000.0
 
     def __post_init__(self):
-        if type(self.delar) is Grundenhet:
-            self.delar = [Delenhet(self.delar, 1)]
-        if type(self.delar) is Enhet:
-            faktor = self.delar._faktor * self._faktor
-            self.delar = self.delar.delar
+        if type(self._delar) is Grundenhet:
+            self._delar = [Delenhet(self._delar, 1)]
+        if type(self._delar) is Enhet:
+            faktor = self._delar._faktor * self._faktor
+            self._delar = self._delar._delar
             self._faktor = faktor
-        if any(type(del_) is not Delenhet for del_ in self.delar):
+        if any(type(del_) is not Delenhet for del_ in self._delar):
             raise(ValueError("Delar i Enhet måste vara lista med typen Delenhet"))
         # slå ihop dubbla enhetsdefinitioner
         rensade_delar = []
-        for del_ in self.delar:
+        for del_ in self._delar:
             if not any(del_.har_samma_grunddimension(del_tillagd) for del_tillagd in rensade_delar):
-                rensade_delar.append(del_)
+                rensade_delar.append(Delenhet(del_.enhet, del_._potens))
             else:
                 for del_samma in rensade_delar:
                     if del_samma.har_samma_grunddimension(del_):
                         del_samma *= del_
         nya_delar = sorted([del_ for del_ in rensade_delar if del_.potens() != 0])
-        self.delar = nya_delar
+        self._delar = nya_delar
 
     @classmethod
     def enhetslos(cls):
         return Enhet([], _faktor = 1)
 
     def ar_enhetslos(self):
-        return self.delar == []
+        return self._delar == []
 
     def namn(self):
         return self._namn
@@ -148,40 +156,39 @@ class Enhet:
         return self._kort
 
     def definition(self):
-        definition_ = " * ".join(str(delenh) for delenh in self.delar)
+        definition_ = " * ".join(str(delenh) for delenh in self._delar)
         return definition_
 
     def faktor(self):
         return self._faktor
 
     def potens(self):
-        if len(self.delar) == 1:
-            return self.delar[0].potens()
+        if len(self._delar) == 1:
+            return self._delar[0].potens()
+
+    def delar(self):
+        return self._delar
 
     def namnge(self, namn, kort, dimension):
-        return Enhet(self.delar, namn, kort, dimension, self._faktor)
+        return Enhet(self._delar, namn, kort, dimension, self._faktor)
 
     def har_samma_dimension(self, other):
-        if type(other) is Enhet:
-            return sorted(self.delar) == sorted(other.delar)
-        elif type(other) is Grundenhet:
-            if len(self.delar) == 1:
-                return self.delar[0] == other
-            return False
-        return NotImplemented
+        if type(other) is Enhet or type(other) is Grundenhet:
+            return sorted(self._delar) == sorted(other.delar())
+        if type(other) is Delenhet:
+            return self.har_samma_dimension(Enhet([other]))
+        raise NotImplementedError(f"har_samma_dimension inte implementerad för: {type(self)}, {type(other)}")
 
     def copy(self):
-        return Enhet(self.delar, self._namn, self._kort, self.dimension, self._faktor)
+        return Enhet(self._delar, self._namn, self._kort, self.dimension, self._faktor)
 
     def __mul__(self, other):
         if other is None:
             return self.copy()
-        if type(other) is Grundenhet:
-            return Enhet(self.delar + [Delenhet(other, 1)], _faktor = self._faktor)
-        elif type(other) is Enhet:
-            return Enhet(self.delar + other.delar, _faktor = self._faktor * other._faktor)
+        if type(other) is Enhet or type(other) is Grundenhet:
+            return Enhet(self._delar + other.delar(), _faktor = self._faktor * other.faktor())
         elif type(other) is int or type(other) is float:
-            return Enhet(self.delar, self._namn, self._kort, self.dimension, self._faktor * other)
+            return Enhet(self._delar, self._namn, self._kort, self.dimension, self._faktor * other)
 
     __rmul__ = __mul__
 
@@ -193,16 +200,16 @@ class Enhet:
 
     def __pow__(self, other):
         mult_delar = []
-        for del_ in self.delar:
+        for del_ in self._delar:
             mult_delar.append(del_ ** other)
         return Enhet(mult_delar, _faktor = pow(self._faktor, other))
 
     def __eq__(self, other):
         if type(other) is Enhet:
-            return self._faktor == other._faktor and sorted(self.delar) == sorted(other.delar)
+            return self._faktor == other._faktor and sorted(self._delar) == sorted(other.delar())
         if type(other) is Grundenhet:
-            if len(self.delar) == 1:
-                return self._faktor == 1 and self.delar[0] == other
+            if len(self._delar) == 1:
+                return self._faktor == 1 and self._delar[0] == other
             return False
         return NotImplemented
 
@@ -219,7 +226,7 @@ class Enhet:
         definition = ""
         if self._faktor != 1:
             definition = f"{self._faktor:g} "
-        if self.delar == []:
+        if self._delar == []:
             definition += "enhetslös"
         definition += self.definition()
         return beskrivning + definition

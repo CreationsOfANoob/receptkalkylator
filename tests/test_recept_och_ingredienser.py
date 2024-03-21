@@ -20,6 +20,11 @@ class TestaIngredienser(unittest.TestCase):
         a = ingrediens.tolka('{"namn":"havregryn", "mätvärden":["10 kr/st", "0.2 kg/st"]}')
         self.assertEqual(a.kilopris(), tal(50, "kr/kg"))
 
+    def testa_tolka_ingrediens_med_styckpris_och_volymstyck_kilopris(self):
+        a = ingrediens.tolka('{"namn": "citronsaft","mätvärden":["5 kr/st", "0,4 dl/st"]}')
+        b = a.pris(tal(1, sample.enheter.msk))
+        self.assertEqual(b, tal(1.875, "kr"))
+
     def testa_ingrediens_till_dict(self):
         a = ingrediens("vetemjöl", [tal(10, "kr/kg")]).till_dict()
         b = {"namn":"vetemjöl", "mätvärden":[tal(10, "kr/kg")]}

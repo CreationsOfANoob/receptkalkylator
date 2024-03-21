@@ -4,6 +4,7 @@ from .context import sample
 m = sample.enheter.m
 km = sample.enheter.km
 kg = sample.enheter.kg
+kr = sample.enheter.kr
 s = sample.enheter.s
 dl = sample.enheter.dl
 l = sample.enheter.l
@@ -259,6 +260,11 @@ class TestaEnheter(unittest.TestCase):
         a = 0.001 * m * m * m
         self.assertEqual(a, l)
 
+    def testa_samma_enheter_samma_dimension(self):
+        a = tal(1, sample.enheter.msk)
+        b = tal(1, sample.enheter.dl)
+        c = a.har_samma_dimension(b)
+        self.assertTrue(c)
 
 class TestaTal(unittest.TestCase):
 
@@ -343,6 +349,12 @@ class TestaTal(unittest.TestCase):
         b = tal(2, s)
         self.assertEqual(a / b, tal(1, m * s**-1))
 
+    def testa_dividera_tal_enhet_grundenhet(self):
+        a = tal(10, kr/kg)
+        b = kr
+        c = a / b
+        self.assertEqual(c, tal(10, 1 / kg))
+
     def testa_tolka_string_till_tal(self):
         a = tal(10, m)
         b = tolka_tal("10 m")
@@ -376,6 +388,11 @@ class TestaTal(unittest.TestCase):
     def testa_tolka_string_till_tal_med_division(self):
         a = tal(10, m/s)
         b = tolka_tal("10 m/s")
+        self.assertEqual(a, b)
+
+    def testa_tolka_string_till_tal_med_division_mellanslag(self):
+        a = tal(10, m/s)
+        b = tolka_tal("10 m / s")
         self.assertEqual(a, b)
 
     def testa_tolka_string_till_tal_med_division_fel(self):

@@ -28,6 +28,10 @@ class Grundenhet:
             return self.id == other.id
         if type(other) is Enhet:
             return Enhet([Delenhet(self, 1)]).har_samma_dimension(other)
+        if type(other) is Delenhet:
+            return Delenhet(self, 1).har_samma_dimension(other)
+        raise(NotImplementedError(f"har_samma_dimension inte definierad för {type(self)}, {type(other)}"))
+
 
     def __mul__(self, other):
         return Enhet([Delenhet(self, 1)]) * other
@@ -69,7 +73,10 @@ class Delenhet:
     def har_samma_dimension(self, other):
         if type(other) is Delenhet:
             return self == other
-        raise(NotImplementedError())
+        try:
+            return other.har_samma_dimension(self)
+        except AttributeError:
+            raise(NotImplementedError(f"har_samma_dimension inte definierad för {type(self)}, {type(other)}"))
 
     def har_samma_grunddimension(self, other):
         if type(other) is Delenhet:
@@ -78,6 +85,9 @@ class Delenhet:
 
     def potens(self):
         return self._potens
+
+    def faktor(self):
+        return 1
 
     def __mul__(self, other):
         return self.enhet * other

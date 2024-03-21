@@ -1,1 +1,1 @@
-from .receptkalkylator import Ingrediens, Recept, Produkt, Produktkatalog
+from .recept_klasser import Ingrediens, Recept, Produkt, Produktkatalog

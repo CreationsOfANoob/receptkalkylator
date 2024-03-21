@@ -1,0 +1,17 @@
+{
+    "rubrik": "Okonomiyaki",
+    "beskrivning": "Okonomiyaki är en supergod japansk vitkålspann-\nkaka. Tillsammans med okonomiyakisåsen, majon-\nnäsen och toppningen blir detta en pangmiddag\nsom du garanterat blir mätt på. Baconen kan du\nutesluta om du vill laga rätten utan kött.",
+    "portioner": 4,
+    "ingredienser": [
+        "400 g vitkål",
+        "6 st salladslökar",
+        "6 st ägg",
+        "3.5 dl vetemjöl",
+        "0.5 tsk salt",
+        "2 tsk bakpulver",
+        "1.5 dl vatten",
+        "140 g bacon"
+    ],
+    "instruktioner": "Blanda ingredienserna till såsen i en liten skål.\n\nStrimla vitkål och salladslök. Vispa ihop ägg, \nmjöl, salt, bakpulver och vatten. Vänd ner vitkålen\noch salladslöken. Tärna baconen.\n\nVärm en stekpanna med olja. Tillsätt ¼ av \nsmeten och forma till en cirkel. Stek på medel-\nvärme i 3–4 minuter och toppa ovansidan med \nbacon. Vänd pannkakan med hjälp av en spatel\noch stek den på andra sidan så att baconen blir \nstekt. Gör på samma sätt med resten av smeten.\n\nToppa pannkakan med okonomiyakisås, \nmajonnäs, salladslök och sesamfrön.\nServera direkt.",
+    "ugnstemperatur": null
+}

@@ -5,41 +5,45 @@ from .main import Grundenhet, Enhet, Delenhet
 from .enheter import enheter as bef_enheter
 
 
-@dataclass
 class Tal:
     kvantitet: float
     enhet: Grundenhet | Enhet
 
-    def __post_init__(self):
+    def __init__(self, kvantitet, enhet, normalisera = True):
+        self.kvantitet = kvantitet
+        self.enhet = enhet
         if type(self.enhet) is str:
-            self.enhet = hitta_enhet_str(self.enhet)
+            self.tolka_str_enhet(self.enhet)
         if self.enhet is None:
             self.enhet = Enhet.enhetslos()
-        self.kvantitet *= self.enhet.faktor() # Ta ut enhetens faktor
+        if normalisera:
+            self.kvantitet *= self.enhet.faktor()
         if not self.enhet in bef_enheter:
             for enh in bef_enheter:
                 if self.enhet.har_samma_dimension(enh):
-                    a = self.kvantitet
                     self.enhet = enh
                     break
 
     @classmethod
     def tolka(cls, str_):
         str_ = str_.replace(",", ".")
-        if type(str_) is str:
-            delar = str_.split()
-            kvant = float(delar[0])
-            enh = hitta_enhet_str(delar[1])
-            if enh is None:
-                raise(ValueError(f"Kunde inte tolka {delar[1]} som en enhet (i {str_})"))
-            return Tal(kvant, enh)
+        delar = str_.split()
+        kvant = float(delar[0])
+        enh = "".join(delar[1:])
+        return Tal(kvant, enh)
+
+    def tolka_str_enhet(self, str_enhet):
+        enh = hitta_enhet_str(str_enhet)
+        if enh is None:
+            raise(ValueError(f"Kunde inte tolka {str_enhet} som en enhet"))
+        self.enhet = enh
 
     def copy(self):
         return Tal(self.kvantitet, self.enhet)
 
     def har_samma_dimension(self, other):
         if type(other) is Tal:
-            return self.enhet == other.enhet
+            return self.enhet.har_samma_dimension(other.enhet)
         return self.enhet.har_samma_dimension(other)
 
     def faktor(self):
@@ -55,12 +59,14 @@ class Tal:
     def __mul__(self, other):
         if type(other) is int or type(other) is float:
             kvantitet_ = self.kvantitet * other
-            return Tal(kvantitet_, self.enhet)
+            return Tal(kvantitet_, self.enhet, False)
         elif type(other) is Tal:
             ny_enhet = self.enhet * other.enhet
-            return Tal((self.kvantitet * other.kvantitet) / ny_enhet.faktor(), ny_enhet)
-        elif type(other) is Enhet:
-            return self * Tal(1, other)
+            return Tal((self.kvantitet * other.kvantitet), ny_enhet, False)
+        elif type(other) is Enhet or type(other) is Grundenhet:
+            return self * Tal(1, other, False)
+        elif type(other) is Delenhet:
+            return self * Tal(1, Enhet([other]), False)
         return NotImplemented
 
     __rmul__ = __mul__
@@ -71,7 +77,7 @@ class Tal:
     def __pow__(self, other):
         if type(other) is int or type(other) is float:
             ny_enhet = pow(self.enhet, other)
-            return Tal(pow(self.kvantitet, other) / ny_enhet.faktor(), ny_enhet)
+            return Tal(pow(self.kvantitet, other), ny_enhet, False)
         return NotImplemented
 
     def __truediv__(self, other):
@@ -79,6 +85,9 @@ class Tal:
 
     def __rtruediv__(self, other):
         return other * pow(self, -1)
+
+    def __round__(self, precision):
+        return Tal(round(self.kvantitet, precision), self.enhet, False)
 
     def __eq__(self, other):
         if type(other) is Tal:

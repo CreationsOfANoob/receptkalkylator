@@ -1,1 +1,81 @@
-{}
+{
+    "produkter": [
+        {
+            "namn": "rågflingor",
+            "mätvärden": [
+                "30 kr/kg",
+                "35 g/dl"
+            ]
+        },
+        {
+            "namn": "råsocker",
+            "mätvärden": [
+                "50 kr/kg",
+                "85 g/dl"
+            ]
+        },
+        {
+            "namn": "rapsolja",
+            "mätvärden": [
+                "40 kr/l",
+                "90 g/dl"
+            ]
+        },
+        {
+            "namn": "färskost",
+            "mätvärden": [
+                "120 kr/kg",
+                "100 g/dl"
+            ]
+        },
+        {
+            "namn": "ägg",
+            "mätvärden": [
+                "4,5 kr/st",
+                "60 g/st"
+            ]
+        },
+        {
+            "namn": "strösocker",
+            "mätvärden": [
+                "30 kr/kg",
+                "85 g/dl"
+            ]
+        },
+        {
+            "namn": "vispgrädde",
+            "mätvärden": [
+                "65 kr/l",
+                "99 g/dl"
+            ]
+        },
+        {
+            "namn": "vetemjöl",
+            "mätvärden": [
+                "14 kr/kg",
+                "60 g/dl"
+            ]
+        },
+        {
+            "namn": "vaniljsocker",
+            "mätvärden": [
+                "80 kr/kg",
+                "60 g/dl"
+            ]
+        },
+        {
+            "namn": "citronsaft",
+            "mätvärden": [
+                "5 kr/st",
+                "0.4 dl/st"
+            ]
+        },
+        {
+            "namn": "havregryn",
+            "mätvärden": [
+                "35 g/dl",
+                "20 kr/kg"
+            ]
+        }
+    ]
+}

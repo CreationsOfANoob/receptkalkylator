@@ -6,10 +6,17 @@ import sample.enheter as enh
 import json
 from dataclasses import dataclass
 
+brak_unicode_tecken = {".33":"⅓", ".67":"⅔", ".2":"⅕", ".4":"⅖", ".6":"⅗", ".8":"⅘", ".5":"½", ".25":"¼", ".75":"¾"}
+
+def tolka_braktecken(str_):
+    inv_braktecken = {v: k for k, v in brak_unicode_tecken.items()}
+    return inv_braktecken.get(str_, None)
+
 def byt_braktecken(str_):
-    brak_unicode_tecken = {".33":"⅓", ".67":"⅔", ".2":"⅕", ".4":"⅖", ".6":"⅗", ".8":"⅘", ".5":"½", ".25":"¼", ".75":"¾"}
     for key, value in brak_unicode_tecken.items():
         str_ = str_.replace(key, " " + value)
+    if str_[0] == "0":
+        str_ = str_[2:]
     return str_
 
 
@@ -71,7 +78,7 @@ class Produkt:
         return self.berakna_varde_i(enh.kr, enh.kg)
 
     def till_dict(self):
-        dict = {"namn":self.namn, "mätvärden":self.matvarden()}
+        dict = {"namn":self.namn, "mätvärden":[str(matv) for matv in self.matvarden()]}
         return dict
 
     def __repr__(self):
@@ -96,6 +103,10 @@ class Produktkatalog:
     def add(self, produkt):
         self.produkter.append(produkt)
 
+    def till_dict(self):
+        dict = {"produkter":[produkt.till_dict() for produkt in self.produkter if not produkt._temp]}
+        return dict
+
     def __add__(self, other):
         if type(other) is Produktkatalog:
             return Produktkatalog(self.produkter + other.produkter)
@@ -109,9 +120,16 @@ class Ingrediens:
     @classmethod
     def tolka(cls, str_, produktkatalog):
         str_delar = str_.split()
-        tal_del = " ".join(str_delar[:2])
-        produkt_del = " ".join(str_delar[2:])
+        testa_brak = tolka_braktecken(str_delar[1])
+        if not testa_brak is None:
+            tal_del = str_delar[0] + testa_brak + str_delar[2]
+            produkt_del = " ".join(str_delar[3:])
+        else:
+            tal_del = " ".join(str_delar[:2])
+            produkt_del = " ".join(str_delar[2:])
         mangd = enh.Tal.tolka(tal_del)
+        if mangd is None:
+            return str_
         produkt = produktkatalog.hitta_med_namn(produkt_del)
         if produkt is None:
             produkt = Produkt(produkt_del, [enh.Tal.tolka("0 kr/kg"), enh.Tal.tolka("0 kr/st"), enh.Tal.tolka("0 kr/dl")], True)
@@ -148,14 +166,18 @@ class Recept:
     def portionskostnad(self):
         return self.totalkostnad() / self.portioner
 
-    def totalkostnad(self):
+    def totalkostnad(self, prata = False):
         totalkostnad = enh.Tal(0, enh.kr)
         for ingrediens in self.ingredienser:
+            if type(ingrediens) is str:
+                continue
             ingredienskostnad = ingrediens.kostnad()
             totalkostnad += ingredienskostnad
+            if prata:
+                print(f"{ingrediens}: {ingredienskostnad}")
         return totalkostnad
 
-    def to_dict(self):
+    def till_dict(self):
         return {
             "rubrik":self.rubrik,
             "beskrivning":self.beskrivning,

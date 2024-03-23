@@ -28,8 +28,11 @@ class Tal:
     def tolka(cls, str_):
         str_ = str_.replace(",", ".")
         delar = str_.split()
-        kvant = float(delar[0])
-        enh = "".join(delar[1:])
+        try:
+            kvant = float(delar[0])
+        except ValueError:
+            return None
+        enh = " ".join(delar[1:])
         return Tal(kvant, enh)
 
     def tolka_str_enhet(self, str_enhet):
@@ -121,7 +124,7 @@ def hitta_enhet_str(str_):
             if char in "/*" or i == len(str_):
                 if i == len(str_):
                     str_enh += char
-                tolkad_enhet = hitta_enkel_enhet(str_enh)
+                tolkad_enhet = hitta_enkel_enhet(str_enh.strip())
                 if tolkad_enhet is None:
                     raise(ValueError(f"Kunde inte tolka enheten {str_enh}"))
                 if last_operator == "*":
@@ -140,7 +143,7 @@ def hitta_enkel_enhet(str_):
     if "^" in str_:
         delar = str_.split("^")
         enh_kort = delar[0]
-        exponent = int(delar[1])
+        exponent = int(delar[1].split(" ")[0].split("*")[0].split("/")[0])
     for enh in bef_enheter:
         if enh.kort() == enh_kort:
             if type(enh) is Grundenhet:

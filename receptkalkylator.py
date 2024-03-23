@@ -113,20 +113,19 @@ def print_line(maxbredd = 500, tecken = "-"):
     print((tecken*bredd)[:bredd])
 
 def print_recept(recept):
-    print_line(tecken = "=")
     print(text_color(str(recept), bcolors.BOLD))
     print()
     print(str(round(recept.data.portionskostnad(), 1)) + " per portion")
-    print_line(tecken = "=")
 
 def print_ingrediens(ingrediens):
-    print_line(tecken = "=")
     print(text_color(ingrediens.namn, bcolors.BOLD))
     print(f"Mätvärden:\n{'\n'.join([str(i) for i in ingrediens.matvarden()])}")
-    print_line(tecken = "=")
 
 def produkt_ar_temporar(ingrediens):
-    return ingrediens.produkt._temp
+    try:
+        return ingrediens.produkt._temp
+    except AttributeError:
+        return False
 
 def redigera_med_cli(text):
     t = tempfile.NamedTemporaryFile(delete = False)
@@ -151,8 +150,8 @@ class DataFromFile:
                 pass
 
     def content_to_str(self):
-        if type(self.data) is sample.Recept:
-            return json.dumps(self.data.to_dict())
+        if type(self.data) is sample.Recept or type(self.data) is sample.Produktkatalog:
+            return json.dumps(self.data.till_dict())
 
     def __repr__(self):
         return str(self.data)
@@ -228,6 +227,7 @@ class ListRuta(Ruta):
                     text += self.invalid_str
             print(f"  {text}")
 
+
 class Redigerare:
     def __init__(self, datafromfileobject, rutor):
         self._data = datafromfileobject
@@ -243,12 +243,12 @@ class Redigerare:
         pretty_print_files()
 
     def print(self):
-        print_line(100, "=-")
+        print_line(100, "* ")
         for i, ruta in enumerate(self._rutor):
             print(f"\n{indexsiffra(i)} ", end = "")
             ruta.print()
         print()
-        print_line(100, "=-")
+        print_line(100, "* ")
 
 
 @dataclass
@@ -263,6 +263,7 @@ class kmd:
     VISA = Kommando("VISA {nummer}", "Visa objekt med NUMMER")
     ANDRA = Kommando("MOD", "Ändra {namn}")
     ANDRAINDEX = Kommando("MOD {nummer}", "Ändra objekt med NUMMER")
+    PRIS = Kommando("PRIS", "Visa ytterligare prisinformation")
     SKAPA = Kommando("SKAPA 'NAMN'", "Skapa nytt objekt med NAMN")
     AVSLUTA = Kommando("Q / AVSLUTA", "Avsluta")
 
@@ -272,7 +273,7 @@ class Kontext:
     RECEPTLISTA = {"upp":HUVUDMENY, "namn":"RECEPT",
         "komm": [kmd.UPP, kmd.VISA, kmd.ANDRAINDEX, kmd.SKAPA]}
     RECEPTVY = {"upp":RECEPTLISTA, "namn":"RECEPT",
-        "komm": [kmd.UPP, kmd.ANDRA]}
+        "komm": [kmd.UPP, kmd.ANDRA, kmd.PRIS]}
     RECEPTREDIGERARE = {"upp":RECEPTVY, "namn":"REDIGERA RECEPT",
         "komm": [kmd.UPP, kmd.ANDRAINDEX]}
     INGREDIENSLISTA = {"upp":HUVUDMENY, "namn": "INGREDIENSER",
@@ -303,6 +304,7 @@ class ReceptShell(cmd.Cmd):
         clear()
         print("Välkommen till Receptkalkylatorn.\n")
         lista_kommandon(self.kontext)
+        print_line(100, "=")
         match self.kontext:
             case Kontext.RECEPTLISTA:
                 lista_recept(self.recept)
@@ -318,7 +320,7 @@ class ReceptShell(cmd.Cmd):
                 print_ingrediens(self.produktkatalog.data.produkter[self.visa_id])
             case Kontext.INGREDIENSREDIGERARE:
                 self.redigerare.print()
-
+        print_line(100, "=")
         return line.lower()
 
     def byt_kontext(self, kontext, tyst = False):
@@ -382,6 +384,13 @@ class ReceptShell(cmd.Cmd):
     def do_ingr(self, arg):
         self.byt_kontext(Kontext.INGREDIENSLISTA)
 
+    def do_pris(self, arg):
+        match self.kontext:
+            case Kontext.RECEPTVY:
+                aktuellt_recept = self.recept[self.visa_id]
+                print(aktuellt_recept.data.totalkostnad(True))
+                print(f"")
+
     def do_mod(self, arg):
         match self.kontext:
             case Kontext.RECEPTVY | Kontext.INGREDIENSVY:
@@ -410,6 +419,17 @@ class ReceptShell(cmd.Cmd):
                 self.recept.append(ny_receptfil)
                 self.visa_id = len(self.recept) - 1
                 self.byt_kontext(Kontext.RECEPTVY)
+                self.do_mod(arg)
+            case Kontext.INGREDIENSLISTA:
+                if any([i.namn == arg for i in self.produktkatalog.data.produkter]):
+                    for i, produkt in enumerate(self.produktkatalog.data.produkter):
+                        if produkt.namn == arg:
+                            self.visa_id = i
+                            break
+                else:
+                    self.produktkatalog.data.produkter.append(sample.Produkt(arg, []))
+                    self.visa_id = len(self.produktkatalog.data.produkter) - 1
+                self.byt_kontext(Kontext.INGREDIENSVY)
                 self.do_mod(arg)
 
     def do_avsluta(self, arg):

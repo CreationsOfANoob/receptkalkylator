@@ -415,6 +415,11 @@ class TestaTal(unittest.TestCase):
         b = tolka_tal("10 m^2")
         self.assertEqual(a, b)
 
+    def testa_tolka_string_till_tal_med_en_exponent_och_sedan_vanlig(self):
+        a = tal(10, m * m)
+        b = tolka_tal("10 m^2 * s")
+        self.assertEqual(a, b)
+
     def testa_skriv_tal(self):
         a = tal(3.14, m)
         self.assertEqual(repr(a), "3.14 m")

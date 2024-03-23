@@ -27,13 +27,13 @@ class TestaIngredienser(unittest.TestCase):
 
     def testa_ingrediens_till_dict(self):
         a = ingrediens("vetemjöl", [tal(10, "kr/kg")]).till_dict()
-        b = {"namn":"vetemjöl", "mätvärden":[tal(10, "kr/kg")]}
+        b = {"namn":"vetemjöl", "mätvärden":[str(tal(10, "kr/kg"))]}
         self.assertEqual(a, b)
 
 
 class TestaRecept(unittest.TestCase):
 
-    recept_1_text = """{"ingredienser":["10 dl havregryn", "1 dl hasselnötter", "1,5 dl råsocker", "2 dl vatten", "5 msk rapsolja", "1 dl pumpakärnor", "1 dl linfrö"], "portioner":15}"""
+    recept_1_text = """{"ingredienser":["10 dl havregryn", "1 dl hasselnötter", "1,5 dl råsocker", "olja till stekning", "2 dl vatten", "5 msk rapsolja", "1 dl pumpakärnor", "1 dl linfrö"], "portioner":15}"""
     ingredienskatalog_1_text = '''{"produkter":
     [
         {"namn":"råsocker", "mätvärden":["50 kr/kg", "85 g/dl"]},

@@ -3,78 +3,128 @@
         {
             "namn": "rågflingor",
             "mätvärden": [
-                "30 kr/kg",
-                "35 g/dl"
+                "30 kr * kg^-1",
+                "350 kg * m^-3"
             ]
         },
         {
             "namn": "råsocker",
             "mätvärden": [
-                "50 kr/kg",
-                "85 g/dl"
+                "50 kr * kg^-1",
+                "850 kg * m^-3"
             ]
         },
         {
             "namn": "rapsolja",
             "mätvärden": [
-                "40 kr/l",
-                "90 g/dl"
+                "40 kr * m^-3",
+                "900 kg * m^-3"
             ]
         },
         {
             "namn": "färskost",
             "mätvärden": [
-                "120 kr/kg",
-                "100 g/dl"
+                "120 kr * kg^-1",
+                "1000 kg * m^-3"
             ]
         },
         {
             "namn": "ägg",
             "mätvärden": [
-                "4,5 kr/st",
-                "60 g/st"
+                "4.5 kr * st^-1",
+                "60 kg * st^-1"
             ]
         },
         {
             "namn": "strösocker",
             "mätvärden": [
-                "30 kr/kg",
-                "85 g/dl"
+                "30 kr * kg^-1",
+                "850 kg * m^-3"
             ]
         },
         {
             "namn": "vispgrädde",
             "mätvärden": [
-                "65 kr/l",
-                "99 g/dl"
+                "65 kr * m^-3",
+                "990 kg * m^-3"
             ]
         },
         {
             "namn": "vetemjöl",
             "mätvärden": [
-                "14 kr/kg",
-                "60 g/dl"
+                "14 kr * kg^-1",
+                "600 kg * m^-3"
             ]
         },
         {
             "namn": "vaniljsocker",
             "mätvärden": [
-                "80 kr/kg",
-                "60 g/dl"
+                "80 kr * kg^-1",
+                "600 kg * m^-3"
             ]
         },
         {
             "namn": "citronsaft",
             "mätvärden": [
-                "5 kr/st",
-                "0.4 dl/st"
+                "5 kr * st^-1",
+                "400 l"
             ]
         },
         {
             "namn": "havregryn",
             "mätvärden": [
-                "35 g/dl",
-                "20 kr/kg"
+                "350 kg * m^-3",
+                "20 kr * kg^-1"
+            ]
+        },
+        {
+            "namn": "vitkål",
+            "mätvärden": [
+                "0 kr * kg^-1",
+                "0 kr * st^-1",
+                "0 kr * m^-3"
+            ]
+        },
+        {
+            "namn": "salladslökar",
+            "mätvärden": [
+                "150 kr * kg^-1",
+                "25 g * st^-1"
+            ]
+        },
+        {
+            "namn": "salt",
+            "mätvärden": [
+                "12.5 kr * kg^-1",
+                "1300 kg * m^-3"
+            ]
+        },
+        {
+            "namn": "vatten",
+            "mätvärden": [
+                "0 kr * kg^-1",
+                "0 kr * st^-1",
+                "0 kr * m^-3"
+            ]
+        },
+        {
+            "namn": "bacon",
+            "mätvärden": [
+                "200 kr * kg^-1"
+            ]
+        },
+        {
+            "namn": "bakpulver",
+            "mätvärden": [
+                "75 kr * kg^-1",
+                "1000 kg * m^-3"
+            ]
+        },
+        {
+            "namn": "torra röda linser",
+            "mätvärden": [
+                "36 kr * kg^-1",
+                "900 kg * m^-3"
             ]
         }
     ]
